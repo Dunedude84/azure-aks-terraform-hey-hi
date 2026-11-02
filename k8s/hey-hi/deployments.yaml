@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: horaire-app
-          image: acrdevolutionslaba0onk.azurecr.io/hey-hi-horaire:v1.0.1
+          image: acrdevolutionslaba0onk.azurecr.io/hey-hi-horaire:v1.0.2
           ports:
             - containerPort: 3000
           envFrom:
@@ -84,7 +84,7 @@ spec:
     spec:
       containers:
         - name: biblio-app
-          image: acrdevolutionslaba0onk.azurecr.io/hey-hi-biblio:v1.0.1
+          image: acrdevolutionslaba0onk.azurecr.io/hey-hi-biblio:v1.0.2
           ports:
             - containerPort: 3001
           envFrom:

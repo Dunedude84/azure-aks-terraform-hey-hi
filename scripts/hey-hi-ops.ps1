@@ -18,6 +18,9 @@ param (
 )
 
 $ErrorActionPreference = "Stop"
+if ($env:PATH -notlike "*Azure\CLI2\wbin*") {
+    $env:PATH += ";C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin"
+}
 $ACR = "acrdevolutionslaba0onk.azurecr.io"
 $Namespace = "hey-hi"
 

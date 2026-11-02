@@ -18,12 +18,9 @@ app.use(session({
     cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
 }));
 
-// Serve static files (login page & assets must be accessible before auth)
-app.use(express.static(path.join(__dirname, 'public')));
-
 // Authentication middleware: protect everything except the login assets/routes
 app.use((req, res, next) => {
-    const publicPaths = ['/login.html', '/api/login'];
+    const publicPaths = ['/login.html', '/api/login', '/api/logout'];
     const isPublic = publicPaths.includes(req.path) || req.path.startsWith('/css/') || req.path.startsWith('/js/');
     if (isPublic) return next();
     if (!req.session.authenticated) {
@@ -32,6 +29,9 @@ app.use((req, res, next) => {
     }
     next();
 });
+
+// Serve static files AFTER auth check so '/' redirects to '/login.html' when unauthenticated
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Login route
 app.post('/api/login', (req, res) => {
