@@ -18,39 +18,9 @@ Initialement hébergées sur un serveur local à domicile (supervisées par **PM
 
 ## 2. Architecture Infonuagique & Sécurité Zero-Trust
 
-```mermaid
-flowchart LR
-    User(["Visiteur HTTPS<br/>hey-hi.ca / biblio.hey-hi.ca"])
-    CF["Cloudflare Edge<br/>(Zero-Trust Tunnel)"]
-
-    subgraph Azure["Microsoft Azure (canadacentral - Terraform)"]
-        ACR["Azure Container Registry<br/>(Images Docker v1.0.1)"]
-        subgraph VNet["VNet 10.10.0.0/16 & Subnet AKS (Aucun port entrant public)"]
-            subgraph AKS["Cluster Azure AKS (Azure CNI Overlay + Cilium)"]
-                CFD["Pod: cloudflared<br/>(Connecteur sortant QUIC)"]
-                SVC1["Service ClusterIP<br/>horaire-service:80"]
-                SVC2["Service ClusterIP<br/>biblio-service:80"]
-                POD1["Pod: horaire-app<br/>(Node.js :3000 - Non-Root)"]
-                POD2["Pod: biblio-app<br/>(Node.js :3001 - Non-Root)"]
-                SEC["Kubernetes Secrets<br/>(horaire-env, biblio-env, cloudflared-token)"]
-            end
-        end
-    end
-
-    Mongo[("MongoDB Atlas<br/>(Cloud Database)")]
-
-    User -->|HTTPS 443| CF
-    CFD ===>|Tunnel sortant chiffré QUIC| CF
-    CFD -->|DNS interne K8s| SVC1
-    CFD -->|DNS interne K8s| SVC2
-    SVC1 --> POD1
-    SVC2 --> POD2
-    ACR -.->|Managed Identity AcrPull| AKS
-    SEC -.->|Injection variables d'env| POD1
-    SEC -.->|Injection variables d'env| POD2
-    POD1 -->|TLS| Mongo
-    POD2 -->|TLS| Mongo
-```
+<p align="center">
+  <img src="./architecture.svg" alt="Architecture Cloud-Native Azure AKS & Terraform" width="100%" />
+</p>
 
 ### Points forts de l'architecture :
 - **Exposition 100 % Zero-Trust (Cloudflare Tunnel dans Kubernetes)** : Aucun LoadBalancer public Azure ni port entrant n'est ouvert sur le Network Security Group (`NSG`). Le Pod `cloudflared` établit une connexion sortante chiffrée (QUIC post-quantique) vers Cloudflare et route le trafic vers les Services `ClusterIP` internes (`http://horaire-service.hey-hi.svc.cluster.local:80` et `http://biblio-service.hey-hi.svc.cluster.local:80`).
