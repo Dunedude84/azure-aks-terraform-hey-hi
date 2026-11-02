@@ -1,5 +1,7 @@
 # Migration Cloud-Native vers Azure AKS avec Terraform & Cloudflare Zero-Trust (`hey-hi.ca`)
 
+**Français** | [English](README.en.md)
+
 > **Projet de préparation pratique — Poste de Spécialiste DevOps (Devolutions)**  
 > **Auteur :** Vincent Lortie (`@Dunedude84`)  
 > **Applications en production :** [https://hey-hi.ca](https://hey-hi.ca) & [https://biblio.hey-hi.ca](https://biblio.hey-hi.ca)
