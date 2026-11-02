@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes disponibilités - Application Horaire</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css?v=4.0">
+    <style>
+        body {
+            display: block;
+        }
+
+        .employee-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px 16px 60px;
+        }
+
+        .employee-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .employee-topbar h1 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+        }
+
+        .employee-card {
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .week-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .week-selector select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            background: #ffffff;
+            color: var(--text-color);
+        }
+
+        .week-selector button {
+            padding: 8px 12px;
+            min-width: 38px;
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        .avail-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .avail-row .day-label {
+            flex: 1;
+            min-width: 160px;
+            font-weight: 500;
+        }
+
+        .avail-row input[type="text"] {
+            width: 75px;
+            text-align: center;
+            padding: 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        #save-status {
+            margin-top: 14px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="employee-container">
+        <div id="guest-banner" class="guest-banner hidden">
+            👀 Mode invité (démonstration) — vous pouvez tout consulter, mais aucune modification n'est sauvegardée.
+        </div>
+        <div class="employee-topbar">
+            <h1 id="employee-name-title">Mes disponibilités</h1>
+            <button id="logout-btn" class="btn-secondary">Se déconnecter</button>
+        </div>
+
+        <section class="employee-card glass-panel">
+            <p class="text-muted" style="margin-bottom: 16px;">
+                Indiquez vos disponibilités pour la semaine sélectionnée. Ces informations seront utilisées pour
+                générer le prochain horaire.
+            </p>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                <div class="week-selector">
+                    <button id="prev-week" class="btn-secondary">&lsaquo;</button>
+                    <select id="week-select"></select>
+                    <button id="next-week" class="btn-secondary">&rsaquo;</button>
+                </div>
+                <button id="copy-next-week" class="btn-secondary">Copier vers la semaine suivante</button>
+            </div>
+
+            <div id="week-container"></div>
+
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button id="save-btn" class="btn-primary">Sauvegarder mes disponibilités</button>
+            </div>
+            <div id="save-status"></div>
+        </section>
+
+        <footer class="app-footer" style="color:white">
+            <p>Designed by VL & Systems - 2026 - All rights reserved</p>
+            <p><a href="https://dunedude84.github.io/PortFolio/" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub Portfolio</a></p>
+        </footer>
+    </div>
+
+    <script src="js/utils.js?v=4"></script>
+    <script src="js/employee.js?v=2"></script>
+</body>
+
+</html>

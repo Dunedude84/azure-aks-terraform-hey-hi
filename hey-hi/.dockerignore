@@ -1,0 +1,9 @@
+node_modules
+npm-debug.log
+.env
+.git
+.gitignore
+api_biblio
+*.test.js
+services/*.test.js
+routes/*.test.js

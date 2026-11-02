@@ -1,0 +1,23 @@
+# ============================================================================
+# Micro-segmentation réseau (Cilium / Kubernetes NetworkPolicy)
+# Garantit que SEUL le pod webapp peut parler à la base de données PostgreSQL
+# ============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-allow-only-webapp
+  namespace: devops-lab
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: webapp
+      ports:
+        - protocol: TCP
+          port: 5432

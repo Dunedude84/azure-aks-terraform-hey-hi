@@ -1,0 +1,45 @@
+# ============================================================================
+# Connecteur Cloudflare Tunnel (cloudflared) pour hey-hi.ca et biblio.hey-hi.ca
+# Dans votre dashboard Cloudflare Zero Trust (Networks > Tunnels), configurez :
+#   1. hey-hi.ca        -> http://horaire-service.hey-hi.svc.cluster.local:80
+#   2. biblio.hey-hi.ca -> http://biblio-service.hey-hi.svc.cluster.local:80
+# ============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared
+  namespace: hey-hi
+  labels:
+    app: cloudflared
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflared
+  template:
+    metadata:
+      labels:
+        app: cloudflared
+    spec:
+      containers:
+        - name: cloudflared
+          image: cloudflare/cloudflared:latest
+          args:
+            - tunnel
+            - --no-autoupdate
+            - --metrics
+            - 0.0.0.0:2000
+            - run
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflared-token
+                  key: TUNNEL_TOKEN
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"

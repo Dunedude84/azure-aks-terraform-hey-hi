@@ -1,0 +1,25 @@
+# ============================================================================
+# Sécurité : Ne JAMAIS versionner de secrets ou d'états Terraform dans Git
+# ============================================================================
+.env
+**/.env
+.env.*
+!**/.env.example
+
+# Fichiers d'état et de plan Terraform (contiennent des informations sensibles)
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+tfplan
+**/tfplan
+
+# Dépendances Node.js
+node_modules/
+**/node_modules/
+npm-debug.log*
+
+# Fichiers temporaires OS / IDE
+.DS_Store
+Thumbs.db

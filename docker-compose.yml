@@ -1,0 +1,22 @@
+services:
+  horaire-app:
+    build:
+      context: ./hey-hi
+      dockerfile: Dockerfile
+    container_name: hey-hi-horaire
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./hey-hi/.env
+    restart: unless-stopped
+
+  biblio-app:
+    build:
+      context: ./hey-hi/api_biblio/book-api
+      dockerfile: Dockerfile
+    container_name: hey-hi-biblio
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./hey-hi/api_biblio/book-api/.env
+    restart: unless-stopped

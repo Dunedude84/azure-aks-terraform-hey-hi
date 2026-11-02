@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Ma Bibliothèque</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f3f4f6;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; max-width: 350px; }
+        h1 { margin-top: 0; font-size: 1.5rem; text-align: center; }
+        .input-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; }
+        input { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 0.5rem; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; margin-top: 1rem; }
+        .error { color: #dc2626; font-size: 0.875rem; margin-top: 0.5rem; text-align: center; display: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Portail Biblio</h1>
+        <form id="login-form">
+            <div class="input-group">
+                <label>Nom d'utilisateur</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="input-group">
+                <label>Mot de passe</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Se connecter</button>
+            <div id="error" class="error">Identifiants incorrects</div>
+        </form>
+    </div>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value
+                })
+            });
+            if (res.ok) window.location.href = '/index.html';
+            else document.getElementById('error').style.display = 'block';
+        });
+    </script>
+</body>
+</html>

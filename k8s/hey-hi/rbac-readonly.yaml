@@ -1,0 +1,34 @@
+# ============================================================================
+# Contrôle d'Accès Basé sur les Rôles (RBAC - Moindre Privilège)
+# Permet à un profil "stagiaire" de consulter l'état des Pods et leurs logs,
+# mais lui interdit de lire les Secrets (.env) ou de supprimer des Pods.
+# ============================================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stagiaire
+  namespace: hey-hi
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: role-lecture-seule-pods
+  namespace: hey-hi
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "services"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: liaison-stagiaire-lecture
+  namespace: hey-hi
+subjects:
+  - kind: ServiceAccount
+    name: stagiaire
+    namespace: hey-hi
+roleRef:
+  kind: Role
+  name: role-lecture-seule-pods
+  apiGroup: rbac.authorization.k8s.io

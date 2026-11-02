@@ -1,0 +1,62 @@
+# ============================================================================
+# Connecteur Cloudflare Tunnel (cloudflared) dans Kubernetes
+# Dans votre dashboard Cloudflare Zero Trust (Networks > Tunnels), configurez
+# la Public Hostname de votre tunnel vers :
+#   http://webapp-service.devops-lab.svc.cluster.local:80
+# ============================================================================
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflared-token
+  namespace: devops-lab
+type: Opaque
+stringData:
+  # Remplacez par le token de votre tunnel Cloudflare (ou injectez-le via kubectl create secret)
+  TUNNEL_TOKEN: "REMPLACER_PAR_VOTRE_TOKEN_CLOUDFLARE_TUNNEL"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared
+  namespace: devops-lab
+  labels:
+    app: cloudflared
+spec:
+  replicas: 2 # 2 réplicas pour assurer la haute disponibilité du tunnel
+  selector:
+    matchLabels:
+      app: cloudflared
+  template:
+    metadata:
+      labels:
+        app: cloudflared
+    spec:
+      containers:
+        - name: cloudflared
+          image: cloudflare/cloudflared:latest
+          args:
+            - tunnel
+            - --no-autoupdate
+            - --metrics
+            - 0.0.0.0:2000
+            - run
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflared-token
+                  key: TUNNEL_TOKEN
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: 2000
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"

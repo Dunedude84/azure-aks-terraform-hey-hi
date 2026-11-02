@@ -1,0 +1,127 @@
+# ============================================================================
+# Application 1 : hey-hi.ca (Gestion d'horaires - Node.js / Express port 3000)
+# ============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: horaire-app
+  namespace: hey-hi
+  labels:
+    app: horaire-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: horaire-app
+  template:
+    metadata:
+      labels:
+        app: horaire-app
+    spec:
+      containers:
+        - name: horaire-app
+          image: acrdevolutionslaba0onk.azurecr.io/hey-hi-horaire:v1.0.1
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: horaire-env
+          env:
+            - name: PORT
+              value: "3000"
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          readinessProbe:
+            httpGet:
+              path: /login.html
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /login.html
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: horaire-service
+  namespace: hey-hi
+spec:
+  type: ClusterIP
+  selector:
+    app: horaire-app
+  ports:
+    - port: 80
+      targetPort: 3000
+---
+# ============================================================================
+# Application 2 : biblio.hey-hi.ca (Ma Bibliothèque - Node.js / Express port 3001)
+# ============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: biblio-app
+  namespace: hey-hi
+  labels:
+    app: biblio-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: biblio-app
+  template:
+    metadata:
+      labels:
+        app: biblio-app
+    spec:
+      containers:
+        - name: biblio-app
+          image: acrdevolutionslaba0onk.azurecr.io/hey-hi-biblio:v1.0.1
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - secretRef:
+                name: biblio-env
+          env:
+            - name: PORT
+              value: "3001"
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          readinessProbe:
+            httpGet:
+              path: /login.html
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /login.html
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: biblio-service
+  namespace: hey-hi
+spec:
+  type: ClusterIP
+  selector:
+    app: biblio-app
+  ports:
+    - port: 80
+      targetPort: 3001

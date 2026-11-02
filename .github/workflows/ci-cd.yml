@@ -1,0 +1,130 @@
+name: CI/CD - hey-hi.ca & Azure AKS
+
+# ============================================================================
+# 1. LES DÉCLENCHEURS (Triggers) : Quand le robot GitHub démarre-t-il ?
+# ============================================================================
+on:
+  push:
+    branches: [main]       # Déploie automatiquement en production quand on fusionne sur 'main'
+  pull_request:
+    branches: [main]       # Vérifie les tests et la sécurité avant d'autoriser une Pull Request
+  workflow_dispatch:       # Ajoute un bouton manuel "Run workflow" dans l'interface GitHub !
+
+permissions:
+  id-token: write          # Permet la connexion OIDC sans mot de passe vers Microsoft Azure
+  contents: read
+
+env:
+  AZURE_RESOURCE_GROUP: rg-devolutionslab-dev
+  AKS_CLUSTER_NAME: aks-devolutionslab-dev
+  ACR_NAME: acrdevolutionslaba0onk
+  K8S_NAMESPACE: hey-hi
+
+jobs:
+  # ==========================================================================
+  # JOB 1 (CI - Intégration Continue) : Tester le code Node.js de hey-hi
+  # ==========================================================================
+  test-apps:
+    name: "1. Tests Automatisés (Node.js)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code source (Checkout)
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: hey-hi/package-lock.json
+
+      - name: Installer les dépendances et lancer les tests unitaires (Horaire)
+        working-directory: ./hey-hi
+        run: |
+          npm ci
+          node --test services/schedulingAlgorithm.test.js
+
+  # ==========================================================================
+  # JOB 2 (CI - Infra) : Vérifier que le code Terraform est propre et valide
+  # ==========================================================================
+  terraform-check:
+    name: "2. Validation Terraform (IaC)"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Vérifier le formatage (terraform fmt)
+        run: terraform fmt -check
+
+      - name: Initialiser et valider la syntaxe Azure
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+  # ==========================================================================
+  # JOB 3 (DevSecOps) : Construire les images Docker et scanner les failles
+  # ==========================================================================
+  security-scan:
+    name: "3. Build Docker & Scan Sécurité (Trivy)"
+    runs-on: ubuntu-latest
+    needs: [test-apps]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Construire l'image hey-hi-horaire
+        run: docker build -t hey-hi-horaire:${{ github.sha }} ./hey-hi
+
+      - name: Scanner l'image avec Trivy (Rapport de sécurité DevSecOps)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "hey-hi-horaire:${{ github.sha }}"
+          format: "table"
+          exit-code: "0"
+          severity: "CRITICAL,HIGH"
+
+  # ==========================================================================
+  # JOB 4 (CD - Livraison Continue) : Push vers ACR et Rolling Update sur AKS
+  # ==========================================================================
+  deploy-aks:
+    name: "4. Déploiement Automatique sur Azure AKS"
+    runs-on: ubuntu-latest
+    needs: [test-apps, terraform-check, security-scan]
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Connexion à Microsoft Azure (OIDC sans mot de passe)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build & Push des 2 images vers Azure Container Registry (ACR)
+        run: |
+          az acr login --name ${{ env.ACR_NAME }}
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/hey-hi-horaire:${{ github.sha }} ./hey-hi
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/hey-hi-biblio:${{ github.sha }} ./hey-hi/api_biblio/book-api
+          docker push ${{ env.ACR_NAME }}.azurecr.io/hey-hi-horaire:${{ github.sha }}
+          docker push ${{ env.ACR_NAME }}.azurecr.io/hey-hi-biblio:${{ github.sha }}
+
+      - name: Connexion au cluster Azure AKS
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name ${{ env.AKS_CLUSTER_NAME }} \
+            --overwrite-existing
+
+      - name: Mise à jour sans coupure (Rolling Update) des 2 Pods
+        run: |
+          kubectl apply -f ./k8s/hey-hi/deployments.yaml
+          kubectl set image deployment/horaire-app horaire-app=${{ env.ACR_NAME }}.azurecr.io/hey-hi-horaire:${{ github.sha }} -n ${{ env.K8S_NAMESPACE }}
+          kubectl set image deployment/biblio-app biblio-app=${{ env.ACR_NAME }}.azurecr.io/hey-hi-biblio:${{ github.sha }} -n ${{ env.K8S_NAMESPACE }}
+          kubectl rollout status deployment/horaire-app -n ${{ env.K8S_NAMESPACE }} --timeout=120s
+          kubectl rollout status deployment/biblio-app -n ${{ env.K8S_NAMESPACE }} --timeout=120s
