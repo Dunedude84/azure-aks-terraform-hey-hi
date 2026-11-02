@@ -12,7 +12,7 @@ Je possède et maintiens une plateforme web personnelle composée de deux applic
 1. **`hey-hi.ca` (`horaire-app`)** : Application de planification et gestion d'horaires d'employés (avec algorithme d'attribution de quarts, portail employé et mode démonstration invité).
 2. **`biblio.hey-hi.ca` (`biblio-app`)** : Gestionnaire de bibliothèque personnelle connecté à l'API OpenLibrary.
 
-Initialement hébergées sur un serveur local à domicile derrière un tunnel Cloudflare, j'ai entrepris — en utilisant mes outils d'IA (LLM) comme mentor interactif — de **conteneuriser et migrer l'intégralité de cette plateforme vers Microsoft Azure Kubernetes Service (AKS)** géré par **Terraform**, tout en construisant les outils d'automatisation CI/CD et d'opérations associés.
+Initialement hébergées sur un serveur local à domicile (supervisées par **PM2**) derrière un tunnel Cloudflare, j'ai entrepris — en utilisant mes outils d'IA (LLM) comme mentor interactif — de **conteneuriser et migrer l'intégralité de cette plateforme vers Microsoft Azure Kubernetes Service (AKS)** géré par **Terraform**, tout en construisant les outils d'automatisation CI/CD et d'opérations associés.
 
 ---
 
@@ -136,3 +136,7 @@ Afin de réduire les frictions opérationnelles et de standardiser les intervent
    - *Solution* : Détection dynamique du `hostname`, build et push de l'image `v1.0.1` vers ACR, et déploiement par *Rolling Update* validé par les sondes `readinessProbe` sans aucune seconde d'interruption.
 4. **Simulation d'incident On-Call (`ImagePullBackOff`) et Rollback Idempotent** :
    - Simulation d'un déploiement défectueux (`v9.9.9-broken`), diagnostic via `kubectl describe pod` (analyse de la section `Events`), et mise en place d'un rollback déclaratif (`kubectl apply -f ./k8s/hey-hi/deployments.yaml`) garantissant l'idempotence et l'absence de dérive de configuration.
+5. **Transition de PM2 (Serveur Local) vers l'Orchestration Kubernetes (AKS)** :
+   - *Constat* : Sur mon serveur maison, **PM2** assurait le maintien en vie des processus Node.js (`pm2 start`), la consultation des journaux (`pm2 logs`) et le monitoring (`pm2 monit`).
+   - *Architecture Cloud-Native* : Dans les `Dockerfile`, les applications sont lancées directement via `CMD ["node", "server.js"]` (PID 1) sans PM2 intermédiaire afin que **Kubernetes** assure nativement la supervision des processus via les `ReplicaSets`, les sondes `livenessProbe` / `readinessProbe`, et l'utilitaire `hey-hi-ops.ps1`.
+
